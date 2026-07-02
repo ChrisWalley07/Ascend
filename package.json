@@ -2,6 +2,9 @@
   "name": "ascend",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "prisma generate && next dev --hostname 127.0.0.1 --port 3004",
     "dev:clean": "lsof -ti :3004 | xargs kill -9 2>/dev/null; lsof -ti :3005 | xargs kill -9 2>/dev/null; lsof -ti :3006 | xargs kill -9 2>/dev/null; lsof -ti :3007 | xargs kill -9 2>/dev/null; rm -rf .next && prisma generate && next dev --hostname 127.0.0.1 --port 3004",
