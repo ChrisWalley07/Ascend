@@ -1,0 +1,585 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  ELITE
+  COMPETITOR
+}
+
+enum TrainingGoal {
+  GENERAL_FITNESS
+  STRENGTH
+  ENGINE
+  COMPETITION
+  HYBRID
+  WEIGHT_MANAGEMENT
+  SKILL_MASTERY
+}
+
+enum TrainingEnvironment {
+  CROSSFIT_AFFILIATE
+  HOME_GYM
+  COMMERCIAL_GYM
+  HYBRID
+}
+
+enum SportDepartment {
+  CROSSFIT
+  HYROX
+  HYBRID
+}
+
+enum HyroxWorkoutType {
+  RACE_SIMULATION
+  STATION_PRACTICE
+  RUNNING_SESSION
+  INTERVALS
+  STRENGTH
+  RECOVERY
+  MOBILITY
+  CUSTOM_SESSION
+}
+
+enum WorkoutType {
+  FOR_TIME
+  AMRAP
+  EMOM
+  STRENGTH
+  INTERVALS
+  SKILL
+  ACCESSORY
+}
+
+enum BenchmarkType {
+  GIRLS
+  HERO
+  OPEN
+  CUSTOM
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  ARCHIVED
+}
+
+enum MeasurementType {
+  SLEEP_HOURS
+  RHR
+  HRV
+  CALORIES
+  PROTEIN
+  MOOD
+  ENERGY
+  SORENESS
+  HYDRATION
+}
+
+enum AchievementType {
+  STREAK
+  PR
+  BENCHMARK
+  CONSISTENCY
+  LEVEL_UP
+  MILESTONE
+}
+
+enum PersonalRecordType {
+  HEAVIEST_LIFT
+  MAX_REPS
+  LONGEST_DISTANCE
+  FASTEST_TIME
+}
+
+enum ScoreDirection {
+  LOWER_IS_BETTER
+  HIGHER_IS_BETTER
+}
+
+enum PbCategory {
+  STRENGTH
+  OLYMPIC
+  GYMNASTICS
+  BODYWEIGHT
+  ERG
+  RUNNING
+  JUMP_ROPE
+  STRONGMAN
+  POWER
+  SKILL_MILESTONE
+  BENCHMARK_WOD
+  COMPLEX
+  TIME_CAPACITY
+  VOLUME
+  CUSTOM
+}
+
+enum PbRecordType {
+  WEIGHT
+  REPS
+  TIME
+  DISTANCE
+  CALORIES
+  HEIGHT
+  MILESTONE
+  SCORE
+}
+
+model User {
+  id                    String            @id @db.Uuid
+  email                 String            @unique
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  athleteProfile        AthleteProfile?
+  workouts              Workout[]
+  personalRecords       PersonalRecord[]
+  personalBests         PersonalBest[]
+  personalBestHistory   PersonalBestHistory[]
+  benchmarkAttempts     BenchmarkAttempt[]
+  goals                 Goal[]
+  measurements          Measurement[]
+  recoveryLogs          RecoveryLog[]
+  bodyweightLogs        BodyweightLog[]
+  achievements          Achievement[]
+  trainingSessions      TrainingSession[]
+  athleteScores         AthleteScore[]
+  aiInsights            AIInsight[]
+  gamificationProfile   GamificationProfile?
+  catalogAchievements   AthleteCatalogAchievement[]
+  seasonSummaries       SeasonSummary[]
+  yearlyReviews         YearInReview[]
+  stravaConnection      StravaConnection?
+  stravaActivities      StravaActivity[]
+  hyroxRaces            HyroxRace[]
+  hyroxAthleteScores    HyroxAthleteScore[]
+  weeklySnapshots       WeeklyIntelligenceSnapshot[]
+}
+
+model AthleteProfile {
+  id                  String               @id @default(cuid())
+  userId              String               @unique @db.Uuid
+  name                String
+  age                 Int?
+  heightCm            Float?
+  weightKg            Float?
+  gender              Gender?
+  trainingAgeMonths   Int?
+  crossfitAffiliate   String?
+  profileImageUrl     String?
+  experienceLevel     ExperienceLevel?
+  primaryGoal         TrainingGoal?
+  trainingDaysPerWeek Int?
+  trainingEnvironment TrainingEnvironment?
+  sportDepartment     SportDepartment?
+  activeSportView     SportDepartment?
+  injuriesNotes       String?
+  focusAreas          String[]             @default([])
+  strongAreas         String[]             @default([])
+  sleepTargetHours    Float?
+  competitionTarget   String?
+  coachNotes          String?
+  profileCompleted    Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workout {
+  id                String            @id @default(cuid())
+  userId            String            @db.Uuid
+  name              String
+  date              DateTime
+  type              WorkoutType
+  sport             SportDepartment   @default(CROSSFIT)
+  hyroxWorkoutType  HyroxWorkoutType?
+  rounds            Int?
+  durationSeconds   Int?
+  rpe               Int?
+  notes             String?
+  metadata          Json?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutExercises  WorkoutExercise[]
+  trainingSession   TrainingSession?
+  stravaActivity    StravaActivity?
+
+  @@index([userId, sport, date])
+}
+
+model Exercise {
+  id                String            @id @default(cuid())
+  name              String            @unique
+  category          String
+  movementType      String
+  primaryMuscles    String[]
+  prTrackingEnabled Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  workoutExercises  WorkoutExercise[]
+  personalRecords   PersonalRecord[]
+}
+
+model WorkoutExercise {
+  id              String    @id @default(cuid())
+  workoutId       String
+  exerciseId      String
+  sequence        Int       @default(0)
+  weightKg        Float?
+  reps            Int?
+  distanceMeters  Float?
+  calories        Int?
+  timeSeconds     Int?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  workout         Workout   @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercise        Exercise  @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+}
+
+model PersonalRecord {
+  id               String    @id @default(cuid())
+  userId           String    @db.Uuid
+  exerciseId       String
+  value            Float
+  unit             String
+  type             PersonalRecordType
+  achievedAt       DateTime
+  sourceWorkoutId  String?
+  createdAt        DateTime  @default(now())
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise         Exercise  @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+}
+
+model PbDefinition {
+  id             String            @id @default(cuid())
+  slug           String            @unique
+  name           String
+  category       PbCategory
+  sport          SportDepartment?
+  subcategory    String?
+  unit           String
+  recordType     PbRecordType
+  scoreDirection ScoreDirection    @default(HIGHER_IS_BETTER)
+  isCore         Boolean           @default(false)
+  sortOrder      Int               @default(0)
+  description    String?
+  createdAt      DateTime          @default(now())
+  personalBests  PersonalBest[]
+
+  @@index([sport, category])
+}
+
+model PersonalBest {
+  id              String                @id @default(cuid())
+  userId          String                @db.Uuid
+  pbDefinitionId  String
+  sport           SportDepartment       @default(CROSSFIT)
+  value           Float
+  displayValue    String
+  achievedAt      DateTime
+  notes           String?
+  sourceWorkoutId String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pbDefinition    PbDefinition          @relation(fields: [pbDefinitionId], references: [id], onDelete: Cascade)
+  history         PersonalBestHistory[]
+
+  @@unique([userId, pbDefinitionId])
+  @@index([userId, sport])
+}
+
+model PersonalBestHistory {
+  id             String       @id @default(cuid())
+  userId         String       @db.Uuid
+  personalBestId String
+  value          Float
+  displayValue   String
+  achievedAt     DateTime
+  notes          String?
+  createdAt      DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  personalBest   PersonalBest @relation(fields: [personalBestId], references: [id], onDelete: Cascade)
+}
+
+model Benchmark {
+  id               String             @id @default(cuid())
+  name             String             @unique
+  type             BenchmarkType
+  sport            SportDepartment?
+  description      String?
+  scoringMode      ScoreDirection     @default(LOWER_IS_BETTER)
+  scoreUnit        String             @default("time")
+  createdAt        DateTime           @default(now())
+  attempts         BenchmarkAttempt[]
+}
+
+model BenchmarkAttempt {
+  id               String      @id @default(cuid())
+  benchmarkId      String
+  userId           String      @db.Uuid
+  workoutId        String?
+  score            String
+  scoreValue       Float
+  date             DateTime
+  createdAt        DateTime    @default(now())
+  benchmark        Benchmark   @relation(fields: [benchmarkId], references: [id], onDelete: Cascade)
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Goal {
+  id                    String           @id @default(cuid())
+  userId                String           @db.Uuid
+  title                 String
+  targetValue           Float
+  currentValue          Float            @default(0)
+  unit                  String
+  sport                 SportDepartment?
+  targetDate            DateTime?
+  status                GoalStatus       @default(ACTIVE)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  completedAt           DateTime?
+  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Measurement {
+  id            String          @id @default(cuid())
+  userId        String          @db.Uuid
+  type          MeasurementType
+  value         Float
+  unit          String
+  measuredAt    DateTime        @default(now())
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RecoveryLog {
+  id                String    @id @default(cuid())
+  userId            String    @db.Uuid
+  date              DateTime  @default(now())
+  readinessScore    Float
+  sleepHours        Float?
+  restingHeartRate  Int?
+  hrv               Int?
+  mood              Int?
+  energy            Int?
+  soreness          Int?
+  hydration         Int?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BodyweightLog {
+  id            String    @id @default(cuid())
+  userId        String    @db.Uuid
+  date          DateTime  @default(now())
+  weightKg      Float
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Achievement {
+  id            String           @id @default(cuid())
+  userId        String           @db.Uuid
+  title         String
+  description   String?
+  type          AchievementType
+  awardedAt     DateTime         @default(now())
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TrainingSession {
+  id             String    @id @default(cuid())
+  userId         String    @db.Uuid
+  workoutId      String?   @unique
+  date           DateTime
+  completed      Boolean   @default(false)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workout        Workout?  @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+}
+
+model AthleteScore {
+  id                    String    @id @default(cuid())
+  userId                String    @db.Uuid
+  date                  DateTime  @default(now())
+  overallScore          Float
+  strengthScore         Float
+  olympicLiftingScore   Float
+  engineScore           Float
+  gymnasticsScore       Float
+  powerScore            Float
+  consistencyScore      Float
+  recoveryScore         Float
+  mobilityScore         Float
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AIInsight {
+  id            String    @id @default(cuid())
+  userId        String    @db.Uuid
+  title         String
+  content       String
+  severity      String    @default("info")
+  createdAt     DateTime  @default(now())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GamificationProfile {
+  id            String    @id @default(cuid())
+  userId        String    @unique @db.Uuid
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  streakDays    Int       @default(0)
+  badges        String[]
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AthleteCatalogAchievement {
+  id            String    @id @default(cuid())
+  userId        String    @db.Uuid
+  achievementId String
+  unlockedAt    DateTime?
+  completedAt   DateTime
+  xpAwarded     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+model SeasonSummary {
+  id              String    @id @default(cuid())
+  userId          String    @db.Uuid
+  seasonLabel     String
+  summaryJson     Json
+  createdAt       DateTime  @default(now())
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model YearInReview {
+  id              String    @id @default(cuid())
+  userId          String    @db.Uuid
+  year            Int
+  highlightsJson  Json
+  createdAt       DateTime  @default(now())
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StravaConnection {
+  id              String    @id @default(cuid())
+  userId          String    @unique @db.Uuid
+  stravaAthleteId String
+  accessToken     String
+  refreshToken    String
+  expiresAt       DateTime
+  scope           String?
+  lastSyncedAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StravaActivity {
+  id                 String    @id @default(cuid())
+  userId             String    @db.Uuid
+  stravaActivityId   String    @unique
+  name               String
+  activityType       String
+  sportType          String?
+  startDate          DateTime
+  distanceMeters     Float?
+  movingTimeSeconds  Int?
+  elapsedTimeSeconds Int?
+  averageHeartrate   Float?
+  maxHeartrate       Float?
+  calories           Float?
+  workoutId          String?   @unique
+  syncedAt           DateTime  @default(now())
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workout            Workout?  @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startDate])
+}
+
+model HyroxRace {
+  id                     String           @id @default(cuid())
+  userId                 String           @db.Uuid
+  name                   String?
+  raceDate               DateTime
+  division               String?
+  ageGroup               String?
+  gender                 Gender?
+  finishTimeSeconds      Int?
+  predictedFinishSeconds Int?
+  transitionTimeSeconds  Int?
+  weakestStationSlug     String?
+  strongestStationSlug   String?
+  notes                  String?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  user                   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  splits                 HyroxRaceSplit[]
+
+  @@index([userId, raceDate])
+}
+
+model HyroxRaceSplit {
+  id               String    @id @default(cuid())
+  raceId           String
+  stationSlug      String
+  sequence         Int
+  timeSeconds      Int?
+  distanceMeters   Float?
+  pacePerKmSeconds Int?
+  race             HyroxRace @relation(fields: [raceId], references: [id], onDelete: Cascade)
+
+  @@unique([raceId, sequence])
+}
+
+model HyroxAthleteScore {
+  id                  String   @id @default(cuid())
+  userId              String   @db.Uuid
+  date                DateTime @default(now())
+  overallScore        Float
+  runningScore        Float
+  engineScore         Float
+  strengthScore       Float
+  powerScore          Float
+  gripScore           Float
+  recoveryScore       Float
+  workCapacityScore   Float
+  mobilityScore       Float
+  mentalScore         Float
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+model WeeklyIntelligenceSnapshot {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid
+  weekStart DateTime
+  sportKey  String
+  payload   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart, sportKey])
+  @@index([userId, weekStart])
+}

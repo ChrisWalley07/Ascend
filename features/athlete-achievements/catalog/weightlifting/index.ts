@@ -1,0 +1,1 @@
+export { weightliftingAchievements } from "./achievements";

@@ -1,0 +1,388 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   ASCEND — ELECTRIC LIME DESIGN SYSTEM
+   Palette: deep matte black + gunmetal + #B6FF3B accent
+   ============================================================ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-sans: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SF Mono", "Menlo", "Roboto Mono", monospace;
+  --font-heading: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Electric Lime token */
+  --color-lime: oklch(0.93 0.24 128);
+  --color-lime-foreground: oklch(0.07 0 0);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.4);
+  --radius-4xl: calc(var(--radius) * 3.2);
+}
+
+/* ============================================================
+   DARK-FIRST DESIGN TOKENS
+   ============================================================ */
+
+:root {
+  /* --- Base backgrounds --- */
+  --background:          oklch(0.07 0 0);     /* #111 — main canvas */
+  --card:                oklch(0.10 0 0);     /* #1a1a1a — card surface */
+  --popover:             oklch(0.10 0 0);
+  --card-foreground:     oklch(0.96 0 0);
+  --popover-foreground:  oklch(0.96 0 0);
+
+  /* --- Text --- */
+  --foreground:          oklch(0.96 0 0);     /* #f5f5f5 — primary text */
+
+  /* --- Electric Lime (primary accent) --- */
+  --primary:             oklch(0.93 0.24 128); /* #B6FF3B */
+  --primary-foreground:  oklch(0.07 0 0);      /* dark on lime */
+
+  /* --- Secondary / muted surfaces --- */
+  --secondary:           oklch(0.13 0 0);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted:               oklch(0.13 0 0);
+  --muted-foreground:    oklch(0.52 0 0);      /* #808080 */
+
+  /* --- Accent (contextual hover states) --- */
+  --accent:              oklch(0.14 0 0);
+  --accent-foreground:   oklch(0.96 0 0);
+
+  /* --- Status --- */
+  --destructive:         oklch(0.60 0.22 27);  /* muted red */
+
+  /* --- Borders / inputs --- */
+  --border:              oklch(1 0 0 / 7%);
+  --input:               oklch(1 0 0 / 8%);
+  --ring:                oklch(0.93 0.24 128); /* lime focus ring */
+
+  /* --- Radius system (8px base) --- */
+  --radius: 0.75rem;
+
+  /* --- Charts --- */
+  --chart-1: oklch(0.93 0.24 128);   /* lime */
+  --chart-2: oklch(0.65 0.15 250);   /* slate blue */
+  --chart-3: oklch(0.50 0 0);        /* graphite */
+  --chart-4: oklch(0.70 0.14 160);   /* muted teal */
+  --chart-5: oklch(0.75 0.17 60);    /* warm amber */
+
+  /* --- Sidebar --- */
+  --sidebar:                    oklch(0.065 0 0);   /* even darker */
+  --sidebar-foreground:         oklch(0.96 0 0);
+  --sidebar-primary:            oklch(0.93 0.24 128);
+  --sidebar-primary-foreground: oklch(0.07 0 0);
+  --sidebar-accent:             oklch(0.12 0 0);
+  --sidebar-accent-foreground:  oklch(0.96 0 0);
+  --sidebar-border:             oklch(1 0 0 / 5%);
+  --sidebar-ring:               oklch(0.93 0.24 128);
+}
+
+/* Force dark — same values */
+.dark {
+  --background:          oklch(0.07 0 0);
+  --card:                oklch(0.10 0 0);
+  --popover:             oklch(0.10 0 0);
+  --card-foreground:     oklch(0.96 0 0);
+  --popover-foreground:  oklch(0.96 0 0);
+  --foreground:          oklch(0.96 0 0);
+  --primary:             oklch(0.93 0.24 128);
+  --primary-foreground:  oklch(0.07 0 0);
+  --secondary:           oklch(0.13 0 0);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted:               oklch(0.13 0 0);
+  --muted-foreground:    oklch(0.52 0 0);
+  --accent:              oklch(0.14 0 0);
+  --accent-foreground:   oklch(0.96 0 0);
+  --destructive:         oklch(0.60 0.22 27);
+  --border:              oklch(1 0 0 / 7%);
+  --input:               oklch(1 0 0 / 8%);
+  --ring:                oklch(0.93 0.24 128);
+  --chart-1: oklch(0.93 0.24 128);
+  --chart-2: oklch(0.65 0.15 250);
+  --chart-3: oklch(0.50 0 0);
+  --chart-4: oklch(0.70 0.14 160);
+  --chart-5: oklch(0.75 0.17 60);
+  --sidebar:                    oklch(0.065 0 0);
+  --sidebar-foreground:         oklch(0.96 0 0);
+  --sidebar-primary:            oklch(0.93 0.24 128);
+  --sidebar-primary-foreground: oklch(0.07 0 0);
+  --sidebar-accent:             oklch(0.12 0 0);
+  --sidebar-accent-foreground:  oklch(0.96 0 0);
+  --sidebar-border:             oklch(1 0 0 / 5%);
+  --sidebar-ring:               oklch(0.93 0.24 128);
+}
+
+/* ============================================================
+   BASE LAYER
+   ============================================================ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+
+  /* Large, confident number rendering */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ============================================================
+   UTILITY LAYER — premium helpers
+   ============================================================ */
+
+@layer utilities {
+  /* Electric Lime glow effects */
+  .glow-lime {
+    box-shadow:
+      0 0 20px oklch(0.93 0.24 128 / 30%),
+      0 0 60px oklch(0.93 0.24 128 / 12%);
+  }
+
+  .glow-lime-sm {
+    box-shadow: 0 0 12px oklch(0.93 0.24 128 / 25%);
+  }
+
+  .glow-lime-border {
+    box-shadow:
+      0 0 0 1px oklch(0.93 0.24 128 / 40%),
+      0 0 16px oklch(0.93 0.24 128 / 15%);
+  }
+
+  /* Glass morphism */
+  .glass {
+    background: oklch(1 0 0 / 3%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid oklch(1 0 0 / 7%);
+  }
+
+  .glass-strong {
+    background: oklch(1 0 0 / 5%);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid oklch(1 0 0 / 10%);
+  }
+
+  /* Premium card surface */
+  .surface {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 1.4);
+  }
+
+  .surface-raised {
+    background: oklch(0.12 0 0);
+    border: 1px solid oklch(1 0 0 / 8%);
+    border-radius: calc(var(--radius) * 1.4);
+  }
+
+  /* Subtle gradient overlays */
+  .gradient-radial-lime {
+    background: radial-gradient(
+      ellipse at top,
+      oklch(0.93 0.24 128 / 8%) 0%,
+      transparent 65%
+    );
+  }
+
+  .gradient-radial-dark {
+    background: radial-gradient(
+      ellipse at top left,
+      oklch(1 0 0 / 3%) 0%,
+      transparent 60%
+    );
+  }
+
+  /* Text gradient */
+  .text-gradient-lime {
+    background: linear-gradient(135deg, #B6FF3B 0%, #8FD400 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Hide scrollbar but keep scroll */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Noise texture overlay */
+  .noise::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Lightweight entrance — used instead of Framer Motion on mobile */
+  .animate-fade-in {
+    animation: fade-in 0.35s ease-out both;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* ============================================================
+   COMPONENT OVERRIDES
+   ============================================================ */
+
+/* Make inputs premium dark */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="file"],
+textarea,
+select {
+  color-scheme: dark;
+}
+
+/* Chart tooltip */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+/* Custom scrollbar on desktop */
+@media (min-width: 1024px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(1 0 0 / 12%);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(1 0 0 / 20%);
+  }
+}
+
+/* Achievement grid — compositor-friendly (transform + opacity only) */
+@keyframes achievement-border-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes achievement-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes achievement-confetti-fall {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--tx), var(--ty), 0) scale(1);
+    opacity: 0;
+  }
+}
+
+.achievement-border-spin {
+  animation: achievement-border-rotate 2.8s linear infinite;
+}
+
+.achievement-glow-pulse {
+  animation: achievement-glow-pulse 2.4s ease-in-out infinite;
+}
+
+.achievement-confetti-particle {
+  animation: achievement-confetti-fall 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .achievement-border-spin,
+  .achievement-glow-pulse,
+  .achievement-confetti-particle {
+    animation: none !important;
+  }
+}

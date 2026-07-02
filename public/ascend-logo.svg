@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="peak" x1="96" y1="416" x2="416" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6BB800"/>
+      <stop offset="0.45" stop-color="#9AE635"/>
+      <stop offset="1" stop-color="#D4FF70"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="256" y1="64" x2="256" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B6FF3B" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#0A0A0A"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#0A0A0A"/>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="112" y="336" width="56" height="64" rx="12" fill="#B6FF3B" fill-opacity="0.28"/>
+  <rect x="184" y="288" width="56" height="112" rx="12" fill="#B6FF3B" fill-opacity="0.45"/>
+  <path d="M256 128L416 384H96L256 128Z" fill="url(#peak)"/>
+  <path d="M256 128L160 368H256V128Z" fill="#FFFFFF" fill-opacity="0.12"/>
+  <circle cx="256" cy="176" r="28" fill="#F5FFD6"/>
+  <circle cx="256" cy="176" r="12" fill="#B6FF3B"/>
+</svg>
