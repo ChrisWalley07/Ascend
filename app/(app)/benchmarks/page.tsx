@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { Medal } from "lucide-react";
+import type { Prisma } from "@prisma/client";
 
 import { getDepartmentSummary } from "@/app/actions/department";
 import { BenchmarkForms } from "@/components/benchmarks/benchmark-forms";
@@ -19,6 +20,14 @@ const defaultBenchmarks = [
   { name: "Murph", type: "HERO" as const, description: "1 mile run, 100 pull-ups, 200 push-ups, 300 squats, 1 mile run", scoringMode: "LOWER_IS_BETTER" as const, scoreUnit: "seconds" },
   { name: "Open 24.1", type: "OPEN" as const, description: "As many reps as possible in 15 minutes", scoringMode: "HIGHER_IS_BETTER" as const, scoreUnit: "reps" },
 ];
+
+type BenchmarkWithAttempts = Prisma.BenchmarkGetPayload<{
+  include: {
+    attempts: {
+      select: { score: true; scoreValue: true; date: true };
+    };
+  };
+}>;
 
 function summarizeAttempts(
   attempts: { scoreValue: number; score: string; date: Date }[],
@@ -50,9 +59,12 @@ function summarizeAttempts(
   };
 }
 
-async function getBenchmarkData(userId: string, activeView: "crossfit" | "hyrox") {
+async function getBenchmarkData(
+  userId: string,
+  activeView: "crossfit" | "hyrox",
+): Promise<{ benchmarks: BenchmarkWithAttempts[] }> {
   const prisma = getPrismaClient();
-  if (!prisma) return { benchmarks: [] as never[] };
+  if (!prisma) return { benchmarks: [] };
 
   const count = await prisma.benchmark.count();
   if (count === 0) {
@@ -93,14 +105,14 @@ export default async function BenchmarksPage() {
     CUSTOM: isHyrox ? "Hyrox Benchmarks" : "Custom",
   };
 
-  const grouped = benchmarks.reduce(
+  const grouped = benchmarks.reduce<Record<string, BenchmarkWithAttempts[]>>(
     (acc, b) => {
       const key = b.type;
       if (!acc[key]) acc[key] = [];
       acc[key].push(b);
       return acc;
     },
-    {} as Record<string, typeof benchmarks>,
+    {},
   );
 
   return (
