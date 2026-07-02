@@ -31,5 +31,10 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(getSupabaseUrl() && getSupabaseAnonKey());
 }
 
-export const SUPABASE_SETUP_MESSAGE =
-  "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.";
+export function getSupabaseSetupMessage(): string {
+  if (process.env.VERCEL) {
+    return "Supabase is not configured on Vercel. Add NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, DATABASE_URL, and SUPABASE_SERVICE_ROLE_KEY in Project Settings → Environment Variables, then redeploy.";
+  }
+
+  return "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart the dev server.";
+}

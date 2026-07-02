@@ -8,18 +8,18 @@ import type { SportDepartment } from "@prisma/client";
 import { ensureDbUser } from "@/lib/ensure-db-user";
 import { isValidDepartment } from "@/lib/departments";
 import { getPrismaClient } from "@/lib/prisma";
-import { isSupabaseConfigured, SUPABASE_SETUP_MESSAGE } from "@/lib/supabase/env";
+import { isSupabaseConfigured, getSupabaseSetupMessage } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { forgotPasswordSchema, loginSchema, signUpSchema } from "@/lib/validations/auth";
 
 async function getSupabaseOrError() {
   if (!isSupabaseConfigured()) {
-    return { error: SUPABASE_SETUP_MESSAGE } as const;
+    return { error: getSupabaseSetupMessage() } as const;
   }
 
   const supabase = await createClient();
   if (!supabase) {
-    return { error: SUPABASE_SETUP_MESSAGE } as const;
+    return { error: getSupabaseSetupMessage() } as const;
   }
 
   return { supabase } as const;
