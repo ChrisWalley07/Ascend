@@ -1,4 +1,7 @@
 {
   "installCommand": "npm ci",
-  "buildCommand": "npx prisma generate && npm run build"
+  "buildCommand": "npx prisma generate && npm run build",
+  "env": {
+    "VERCEL_FORCE_NO_BUILD_CACHE": "1"
+  }
 }
