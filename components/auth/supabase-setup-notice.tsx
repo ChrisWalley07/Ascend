@@ -20,13 +20,13 @@ export function SupabaseSetupNotice() {
               Add your Supabase keys in Vercel → Project Settings → Environment Variables, then redeploy.
               Required:{" "}
               <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">NEXT_PUBLIC_SUPABASE_URL</code>,{" "}
-              <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>,{" "}
+              <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code>,{" "}
               <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">DATABASE_URL</code>,{" "}
               <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">SUPABASE_SERVICE_ROLE_KEY</code>.
             </>
           ) : (
             <>
-              Add your project URL and anon key to{" "}
+              Add your project URL and publishable key to{" "}
               <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[11px]">.env.local</code>, then restart
               the dev server. Get values from{" "}
               <a
