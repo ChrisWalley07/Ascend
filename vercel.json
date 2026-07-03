@@ -1,4 +1,4 @@
 {
   "installCommand": "npm ci",
-  "buildCommand": "bash scripts/vercel-build.sh"
+  "buildCommand": "npx prisma generate && npm run build"
 }
