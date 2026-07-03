@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
 
-import { selectSportDepartmentAndRedirect } from "@/app/actions/department";
+import { selectSportDepartmentAction } from "@/app/actions/department";
 import { buttonVariants } from "@/components/ui/button";
 import { DEPARTMENT_LIST, type DepartmentId } from "@/lib/departments";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export function DepartmentPicker({ initialDepartment, variant = "onboarding" }: Props) {
+  const router = useRouter();
   const [selected, setSelected] = useState<DepartmentId | null>(initialDepartment ?? null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +27,12 @@ export function DepartmentPicker({ initialDepartment, variant = "onboarding" }: 
 
     if (variant === "onboarding") {
       startTransition(async () => {
-        const result = await selectSportDepartmentAndRedirect(id);
-        if (result?.error) setError(result.error);
+        const result = await selectSportDepartmentAction(id);
+        if (result?.error) {
+          setError(result.error);
+          return;
+        }
+        router.push("/onboarding/start");
       });
     }
   };

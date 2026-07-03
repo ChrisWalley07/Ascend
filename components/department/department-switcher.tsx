@@ -24,7 +24,8 @@ export function DepartmentSwitcher({ currentDepartment, compact }: Props) {
     if (value === currentDepartment) return;
     startTransition(async () => {
       const result = await selectSportDepartmentAction(value);
-      if (!result.error) router.refresh();
+      if (result.error) return;
+      router.refresh();
     });
   };
 

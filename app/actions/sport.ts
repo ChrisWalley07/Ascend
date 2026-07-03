@@ -2,11 +2,11 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import type { SportDepartment } from "@prisma/client";
 
 import { requireUser } from "@/lib/auth";
+import { ensureDbUser } from "@/lib/ensure-db-user";
 import { getPrismaClient } from "@/lib/prisma";
 import { isMissingSchemaError } from "@/lib/prisma/schema-compat";
 import { loadSportProfile } from "@/lib/sport/load-profile";
@@ -64,38 +64,43 @@ export async function selectSportDepartmentAction(
   const prisma = getPrismaClient();
   if (!prisma) return { error: "Database not configured." };
 
-  const defaultView: SportDepartment | null =
-    department === "HYBRID" ? "CROSSFIT" : department === "CROSSFIT" ? "CROSSFIT" : "HYROX";
-
-  const baseData = {
-    userId: user.id,
-    name: user.email?.split("@")[0] ?? "Athlete",
-    sportDepartment: department,
-  };
-
   try {
-    await prisma.athleteProfile.upsert({
-      where: { userId: user.id },
-      create: { ...baseData, activeSportView: defaultView },
-      update: { sportDepartment: department, activeSportView: defaultView },
-    });
-  } catch (error) {
-    if (!isMissingSchemaError(error)) throw error;
-    await prisma.athleteProfile.upsert({
-      where: { userId: user.id },
-      create: baseData,
-      update: { sportDepartment: department },
-    });
-  }
+    await ensureDbUser(user);
 
-  revalidateAll();
-  return {};
+    const defaultView: SportDepartment | null =
+      department === "HYBRID" ? "CROSSFIT" : department === "CROSSFIT" ? "CROSSFIT" : "HYROX";
+
+    const baseData = {
+      userId: user.id,
+      name: user.email?.split("@")[0] ?? "Athlete",
+      sportDepartment: department as SportDepartment,
+    };
+
+    try {
+      await prisma.athleteProfile.upsert({
+        where: { userId: user.id },
+        create: { ...baseData, activeSportView: defaultView },
+        update: { sportDepartment: department as SportDepartment, activeSportView: defaultView },
+      });
+    } catch (error) {
+      if (!isMissingSchemaError(error)) throw error;
+      await prisma.athleteProfile.upsert({
+        where: { userId: user.id },
+        create: baseData,
+        update: { sportDepartment: department as SportDepartment },
+      });
+    }
+
+    revalidateAll();
+    return {};
+  } catch (error) {
+    console.error("[sport] selectSportDepartmentAction failed", error);
+    return { error: "Could not save sport mode. Please try again." };
+  }
 }
 
 export async function selectSportDepartmentAndRedirect(department: string) {
-  const result = await selectSportDepartmentAction(department);
-  if (result.error) return result;
-  redirect("/onboarding/start");
+  return selectSportDepartmentAction(department);
 }
 
 export async function setActiveSportViewAction(view: SportView): Promise<{ error?: string }> {
