@@ -5,6 +5,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
+import { getDatabaseUrl } from "@/lib/supabase/env";
+
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient | null;
   pool?: Pool;
@@ -22,7 +24,7 @@ function getClientFingerprint(): string {
 }
 
 function createPrismaClient(): PrismaClient | null {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = getDatabaseUrl();
   if (!connectionString) {
     console.warn("[prisma] DATABASE_URL is not set");
     return null;
