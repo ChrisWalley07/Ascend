@@ -67,6 +67,19 @@ export async function collectAchievementMetrics(
   userId: string,
   asOf: Date = new Date(),
 ): Promise<AchievementMetricSnapshot> {
+  try {
+    return await collectAchievementMetricsInternal(prisma, userId, asOf);
+  } catch (error) {
+    console.error("[achievements] collectAchievementMetrics failed", error);
+    return {};
+  }
+}
+
+async function collectAchievementMetricsInternal(
+  prisma: PrismaClient,
+  userId: string,
+  asOf: Date = new Date(),
+): Promise<AchievementMetricSnapshot> {
   const weekAgo = subDays(asOf, 7);
   const crossfitWhere = await crossfitWorkoutWhere(prisma, userId);
 

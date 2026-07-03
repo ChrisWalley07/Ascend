@@ -33,15 +33,20 @@ export async function syncAchievementsForUser(
   const prisma = getPrismaClient();
   if (!prisma) return null;
 
-  const view =
-    activeView ??
-    (await getDepartmentSummary(userId).then((summary) => summary.activeView)) ??
-    "crossfit";
+  try {
+    const view =
+      activeView ??
+      (await getDepartmentSummary(userId).then((summary) => summary.activeView)) ??
+      "crossfit";
 
-  return evaluateAndSyncAthleteAchievements(prisma, {
-    userId,
-    activeCategories: resolveActiveCategories(view),
-  });
+    return await evaluateAndSyncAthleteAchievements(prisma, {
+      userId,
+      activeCategories: resolveActiveCategories(view),
+    });
+  } catch (error) {
+    console.error("[achievements] sync failed", error);
+    return null;
+  }
 }
 
 export async function getAchievementPageData(): Promise<AchievementPageData> {

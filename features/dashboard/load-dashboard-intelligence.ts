@@ -36,6 +36,50 @@ export async function loadDashboardIntelligence(
     goals: CoachGoalContext[];
   },
 ): Promise<DashboardIntelligenceBundle> {
+  try {
+    return await loadDashboardIntelligenceInternal(prisma, userId, sportView, options);
+  } catch (error) {
+    console.error("[dashboard] intelligence load failed", error);
+    return createFallbackDashboardIntelligence(options);
+  }
+}
+
+function createFallbackDashboardIntelligence(options: {
+  overallScore: number;
+  profileComplete: boolean;
+  workoutCount: number;
+  goals: CoachGoalContext[];
+}): DashboardIntelligenceBundle {
+  return {
+    coachReport: null,
+    recoveryReport: null,
+    weaknessReport: null,
+    weeklyDigest: buildWeeklyDigest({
+      coach: null,
+      weakness: null,
+      recovery: null,
+      goals: options.goals,
+      currentScore: options.overallScore,
+    }),
+    racePrep: null,
+    focusArea: null,
+    todayCheckIn: null,
+    showGettingStarted: !options.profileComplete || options.workoutCount < 2,
+    currentScore: options.overallScore,
+  };
+}
+
+async function loadDashboardIntelligenceInternal(
+  prisma: PrismaClient,
+  userId: string,
+  sportView: SportView,
+  options: {
+    overallScore: number;
+    profileComplete: boolean;
+    workoutCount: number;
+    goals: CoachGoalContext[];
+  },
+): Promise<DashboardIntelligenceBundle> {
   const [coachReport, recoveryReport, weaknessReport, todayCheckIn, priorScore] =
     await Promise.all([
       getCoachReport(prisma, userId, { sportView }),

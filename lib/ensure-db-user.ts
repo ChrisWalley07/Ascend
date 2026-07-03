@@ -19,26 +19,30 @@ export async function ensureDbUser(user: SupabaseUser) {
 
   const name = displayName(user);
 
-  await prisma.user.upsert({
-    where: { id: user.id },
-    create: {
-      id: user.id,
-      email,
-      athleteProfile: {
-        create: { name },
+  try {
+    await prisma.user.upsert({
+      where: { id: user.id },
+      create: {
+        id: user.id,
+        email,
+        athleteProfile: {
+          create: { name },
+        },
       },
-    },
-    update: { email },
-  });
-
-  const profile = await prisma.athleteProfile.findUnique({
-    where: { userId: user.id },
-    select: { id: true },
-  });
-
-  if (!profile) {
-    await prisma.athleteProfile.create({
-      data: { userId: user.id, name },
+      update: { email },
     });
+
+    const profile = await prisma.athleteProfile.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    });
+
+    if (!profile) {
+      await prisma.athleteProfile.create({
+        data: { userId: user.id, name },
+      });
+    }
+  } catch (error) {
+    console.error("[auth] ensureDbUser failed", error);
   }
 }
