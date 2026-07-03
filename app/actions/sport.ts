@@ -6,9 +6,9 @@ import { revalidatePath } from "next/cache";
 import type { SportDepartment } from "@prisma/client";
 
 import { requireUser } from "@/lib/auth";
-import { ensureDbUser } from "@/lib/ensure-db-user";
+import { displayName, ensureDbUser } from "@/lib/ensure-db-user";
 import { getPrismaClient } from "@/lib/prisma";
-import { isMissingSchemaError } from "@/lib/prisma/schema-compat";
+import { formatPrismaActionError, isMissingSchemaError } from "@/lib/prisma/schema-compat";
 import { loadSportProfile } from "@/lib/sport/load-profile";
 import { getSportConfig, isValidSport } from "@/lib/sports/registry";
 import {
@@ -19,6 +19,54 @@ import {
   type SportContext,
   type SportView,
 } from "@/lib/sports/types";
+
+function defaultViewForDepartment(department: SportDepartment): SportDepartment {
+  if (department === "HYBRID") return "CROSSFIT";
+  if (department === "HYROX") return "HYROX";
+  return "CROSSFIT";
+}
+
+async function upsertSportDepartment(
+  userId: string,
+  name: string,
+  department: SportDepartment,
+): Promise<void> {
+  const prisma = getPrismaClient();
+  if (!prisma) throw new Error("Database not configured.");
+
+  const activeSportView = defaultViewForDepartment(department);
+
+  try {
+    await prisma.athleteProfile.upsert({
+      where: { userId },
+      create: {
+        userId,
+        name,
+        sportDepartment: department,
+        activeSportView,
+      },
+      update: {
+        sportDepartment: department,
+        activeSportView,
+      },
+    });
+    return;
+  } catch (error) {
+    if (!isMissingSchemaError(error)) throw error;
+  }
+
+  await prisma.athleteProfile.upsert({
+    where: { userId },
+    create: {
+      userId,
+      name,
+      sportDepartment: department,
+    },
+    update: {
+      sportDepartment: department,
+    },
+  });
+}
 
 export async function getSportContextForUser(userId: string): Promise<SportContext | null> {
   const prisma = getPrismaClient();
@@ -64,38 +112,26 @@ export async function selectSportDepartmentAction(
   const prisma = getPrismaClient();
   if (!prisma) return { error: "Database not configured." };
 
+  const sport = department as SportDepartment;
+  const name = displayName(user);
+
   try {
-    await ensureDbUser(user);
-
-    const defaultView: SportDepartment | null =
-      department === "HYBRID" ? "CROSSFIT" : department === "CROSSFIT" ? "CROSSFIT" : "HYROX";
-
-    const baseData = {
-      userId: user.id,
-      name: user.email?.split("@")[0] ?? "Athlete",
-      sportDepartment: department as SportDepartment,
-    };
-
-    try {
-      await prisma.athleteProfile.upsert({
-        where: { userId: user.id },
-        create: { ...baseData, activeSportView: defaultView },
-        update: { sportDepartment: department as SportDepartment, activeSportView: defaultView },
-      });
-    } catch (error) {
-      if (!isMissingSchemaError(error)) throw error;
-      await prisma.athleteProfile.upsert({
-        where: { userId: user.id },
-        create: baseData,
-        update: { sportDepartment: department as SportDepartment },
-      });
+    const synced = await ensureDbUser(user);
+    if (!synced) {
+      return {
+        error:
+          "Could not sync your account to the database. Check DATABASE_URL in Vercel matches your Supabase project.",
+      };
     }
 
+    await upsertSportDepartment(user.id, name, sport);
     revalidateAll();
     return {};
   } catch (error) {
     console.error("[sport] selectSportDepartmentAction failed", error);
-    return { error: "Could not save sport mode. Please try again." };
+    return {
+      error: formatPrismaActionError(error, "Could not save sport mode. Please try again."),
+    };
   }
 }
 

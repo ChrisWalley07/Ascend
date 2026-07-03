@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { selectSportDepartmentAction } from "@/app/actions/department";
@@ -16,15 +16,20 @@ type Props = {
 export function DepartmentSwitcher({ currentDepartment, compact }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   const current = DEPARTMENT_LIST.find((d) => d.id === currentDepartment) ?? DEPARTMENT_LIST[0];
   const Icon = current.icon;
 
   const handleChange = (value: string) => {
     if (value === currentDepartment) return;
+    setError(null);
     startTransition(async () => {
       const result = await selectSportDepartmentAction(value);
-      if (result.error) return;
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
       router.refresh();
     });
   };
@@ -68,6 +73,11 @@ export function DepartmentSwitcher({ currentDepartment, compact }: Props) {
           ))}
         </select>
       </div>
+      {error && (
+        <p className="mt-2 px-1 text-[11px] text-red-400" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
