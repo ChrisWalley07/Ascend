@@ -31,13 +31,16 @@ export async function collectPredictionContext(
   userId: string,
   options: PerformancePredictionOptions = {},
 ): Promise<PredictionModelContext | null> {
-  const raw = await collectIntelligenceData(prisma, userId, { sportView: options.sportView });
-  if (!raw) return null;
+  try {
+    const raw = await collectIntelligenceData(prisma, userId, { sportView: options.sportView });
+    if (!raw) return null;
 
-  const profile = await prisma.athleteProfile.findUnique({
-    where: { userId },
-    select: { sportDepartment: true, activeSportView: true },
-  });
+    const profile = await prisma.athleteProfile
+      .findUnique({
+        where: { userId },
+        select: { sportDepartment: true, activeSportView: true },
+      })
+      .catch(() => null);
 
   const sportView =
     options.sportView ??
@@ -112,6 +115,10 @@ export async function collectPredictionContext(
     hyroxScoreHistory,
     pbHistory: Array.from(deduped.values()),
   };
+  } catch (error) {
+    console.error("[predictions] context collection failed", error);
+    return null;
+  }
 }
 
 export function pbSeries(ctx: PredictionModelContext, slug: string): DatedValue[] {

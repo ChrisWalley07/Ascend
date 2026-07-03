@@ -13,6 +13,11 @@ export async function getPerformancePredictionsForUser(): Promise<PerformancePre
   const prisma = getPrismaClient();
   if (!prisma) return null;
 
-  const { activeView } = await getDepartmentSummary(user.id);
-  return getPerformancePredictionReport(prisma, user.id, { sportView: activeView });
+  try {
+    const { activeView } = await getDepartmentSummary(user.id);
+    return await getPerformancePredictionReport(prisma, user.id, { sportView: activeView });
+  } catch (error) {
+    console.error("[predictions] load failed", error);
+    return null;
+  }
 }

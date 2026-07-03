@@ -78,11 +78,56 @@ function summarizeBenchmarkAttempts(
   return { best: best.score, improved, lastDate: latest.date };
 }
 
-export async function getAthleteProfileScreenData(): Promise<ProfileScreenData> {
-  const user = await requireUser();
+function createEmptyAchievementResult(userId: string): AchievementEngineResult {
+  return {
+    evaluatedAt: new Date().toISOString(),
+    userId,
+    completionPercent: 0,
+    earnedXp: 0,
+    locked: [],
+    available: [],
+    completed: [],
+    nextAchievements: [],
+    newlyCompleted: [],
+    newlyUnlocked: [],
+    newlyEarnedXp: 0,
+    all: [],
+  };
+}
+
+function createFallbackProfileScreenData(
+  userId: string,
+  sportLabel: string,
+): ProfileScreenData {
+  const emptyResult = createEmptyAchievementResult(userId);
+  return {
+    name: "Athlete",
+    profileImageUrl: null,
+    sportLabel,
+    profileCompleted: false,
+    achievementResult: emptyResult,
+    xpProgress: calculateXpProgressionFromAchievements(0),
+    stats: {
+      totalWorkouts: 0,
+      workoutsLast30Days: 0,
+      personalBestsLogged: 0,
+      benchmarksLogged: 0,
+      trainingStreakDays: 0,
+      overallScore: 62,
+      goalAlignmentScore: 0,
+    },
+    benchmarks: [],
+    recentPrs: [],
+    recentUnlocks: [],
+  };
+}
+
+async function loadAthleteProfileScreenDataInternal(
+  userId: string,
+): Promise<ProfileScreenData> {
   const prisma = getPrismaClient();
-  const { activeView, viewConfig } = await getDepartmentSummary(user.id);
-  const { profile, analysis } = await getAthleteProfileData(user.id);
+  const { activeView, viewConfig } = await getDepartmentSummary(userId);
+  const { profile, analysis } = await getAthleteProfileData(userId);
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -96,82 +141,79 @@ export async function getAthleteProfileScreenData(): Promise<ProfileScreenData> 
     streakFromGamification,
     profileRow,
   ] = await Promise.all([
-    syncAchievementsForUser(user.id, activeView),
-    getAthleteScoreSnapshot(user.id),
-    getPersonalBestBoard(user.id, activeView),
+    syncAchievementsForUser(userId, activeView),
+    getAthleteScoreSnapshot(userId),
+    getPersonalBestBoard(userId, activeView).catch(() => ({
+      items: [],
+      stats: { totalLogged: 0, coreLogged: 0, coreTotal: 0, recentCount: 0 },
+      view: activeView,
+    })),
     prisma
       ? Promise.all([
-          prisma.workout.count({ where: { userId: user.id } }),
-          prisma.workout.count({
-            where: { userId: user.id, date: { gte: thirtyDaysAgo } },
-          }),
+          prisma.workout.count({ where: { userId } }).catch(() => 0),
+          prisma.workout
+            .count({ where: { userId, date: { gte: thirtyDaysAgo } } })
+            .catch(() => 0),
         ])
       : Promise.resolve([0, 0] as const),
     prisma
-      ? prisma.benchmarkAttempt.count({ where: { userId: user.id } })
+      ? prisma.benchmarkAttempt.count({ where: { userId } }).catch(() => 0)
       : Promise.resolve(0),
     prisma
       ? prisma.gamificationProfile
-          .findUnique({ where: { userId: user.id }, select: { streakDays: true } })
+          .findUnique({ where: { userId }, select: { streakDays: true } })
           .catch(() => null)
       : Promise.resolve(null),
     prisma
-      ? prisma.athleteProfile.findUnique({
-          where: { userId: user.id },
-          select: { profileImageUrl: true },
-        })
+      ? prisma.athleteProfile
+          .findUnique({
+            where: { userId },
+            select: { profileImageUrl: true },
+          })
+          .catch(() => null)
       : Promise.resolve(null),
   ]);
 
-  const emptyResult: AchievementEngineResult = {
-    evaluatedAt: new Date().toISOString(),
-    userId: user.id,
-    completionPercent: 0,
-    earnedXp: 0,
-    locked: [],
-    available: [],
-    completed: [],
-    nextAchievements: [],
-    newlyCompleted: [],
-    newlyUnlocked: [],
-    newlyEarnedXp: 0,
-    all: [],
-  };
+  const emptyResult = createEmptyAchievementResult(userId);
 
   const result = achievementResult ?? emptyResult;
   const xpProgress = calculateXpProgressionFromAchievements(result.earnedXp);
 
   let benchmarks: ProfileBenchmarkPreview[] = [];
   if (prisma) {
-    const sportFilter = await benchmarkWhereForView(prisma, activeView);
-    const benchmarkRows = await prisma.benchmark.findMany({
-      where: sportFilter,
-      orderBy: { name: "asc" },
-      take: 12,
-      include: {
-        attempts: {
-          where: { userId: user.id },
-          orderBy: { date: "desc" },
-          select: { score: true, scoreValue: true, date: true },
+    try {
+      const sportFilter = await benchmarkWhereForView(prisma, activeView);
+      const benchmarkRows = await prisma.benchmark.findMany({
+        where: sportFilter,
+        orderBy: { name: "asc" },
+        take: 12,
+        include: {
+          attempts: {
+            where: { userId },
+            orderBy: { date: "desc" },
+            select: { score: true, scoreValue: true, date: true },
+          },
         },
-      },
-    });
+      });
 
-    benchmarks = benchmarkRows
-      .filter((row) => row.attempts.length > 0)
-      .map((row) => {
-        const summary = summarizeBenchmarkAttempts(row.attempts, row.scoringMode);
-        return {
-          id: row.id,
-          name: row.name,
-          bestScore: summary.best,
-          attemptCount: row.attempts.length,
-          improved: summary.improved,
-          lastAttemptDate: summary.lastDate ? format(summary.lastDate, "MMM d, yyyy") : null,
-        };
-      })
-      .sort((a, b) => b.attemptCount - a.attemptCount)
-      .slice(0, 5);
+      benchmarks = benchmarkRows
+        .filter((row) => row.attempts.length > 0)
+        .map((row) => {
+          const summary = summarizeBenchmarkAttempts(row.attempts, row.scoringMode);
+          return {
+            id: row.id,
+            name: row.name,
+            bestScore: summary.best,
+            attemptCount: row.attempts.length,
+            improved: summary.improved,
+            lastAttemptDate: summary.lastDate ? format(summary.lastDate, "MMM d, yyyy") : null,
+          };
+        })
+        .sort((a, b) => b.attemptCount - a.attemptCount)
+        .slice(0, 5);
+    } catch (error) {
+      console.error("[profile] benchmark preview load failed", error);
+    }
   }
 
   const recentPrs: ProfilePrPreview[] = pbBoard.items
@@ -216,4 +258,16 @@ export async function getAthleteProfileScreenData(): Promise<ProfileScreenData> 
     recentPrs,
     recentUnlocks,
   };
+}
+
+export async function getAthleteProfileScreenData(): Promise<ProfileScreenData> {
+  const user = await requireUser();
+
+  try {
+    return await loadAthleteProfileScreenDataInternal(user.id);
+  } catch (error) {
+    console.error("[profile] screen data load failed", error);
+    const summary = await getDepartmentSummary(user.id).catch(() => null);
+    return createFallbackProfileScreenData(user.id, summary?.viewConfig.label ?? "CrossFit");
+  }
 }

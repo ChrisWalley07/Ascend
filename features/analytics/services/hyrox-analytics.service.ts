@@ -122,5 +122,11 @@ export async function getHyroxAnalyticsForUser(userId: string): Promise<HyroxAna
   const { getPrismaClient } = await import("@/infrastructure/database/client");
   const prisma = getPrismaClient();
   if (!prisma) return null;
-  return getHyroxAnalytics(prisma, userId);
+
+  try {
+    return await getHyroxAnalytics(prisma, userId);
+  } catch (error) {
+    console.error("[analytics] hyrox load failed", error);
+    return null;
+  }
 }

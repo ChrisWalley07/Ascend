@@ -26,10 +26,15 @@ export async function getTodayRecoveryCheckIn(): Promise<TodayCheckIn | null> {
   const prisma = getPrismaClient();
   if (!prisma) return null;
 
-  const log = await prisma.recoveryLog.findFirst({
-    where: { userId: user.id, date: { gte: startOfToday() } },
-    orderBy: { date: "desc" },
-  });
+  const log = await prisma.recoveryLog
+    .findFirst({
+      where: { userId: user.id, date: { gte: startOfToday() } },
+      orderBy: { date: "desc" },
+    })
+    .catch((error) => {
+      console.error("[recovery] today check-in load failed", error);
+      return null;
+    });
 
   if (!log) return null;
 

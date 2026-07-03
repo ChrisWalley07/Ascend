@@ -46,57 +46,62 @@ export async function getAthleteProfileData(userId: string): Promise<{
   const prisma = getPrismaClient();
   if (!prisma) return { profile: null, analysis: null };
 
-  const row = await prisma.athleteProfile.findUnique({ where: { userId } });
-  if (!row) return { profile: null, analysis: null };
+  try {
+    const row = await prisma.athleteProfile.findUnique({ where: { userId } });
+    if (!row) return { profile: null, analysis: null };
 
-  const profile: AthleteProfileDTO = {
-    name: row.name,
-    age: row.age,
-    gender: row.gender,
-    heightCm: row.heightCm,
-    weightKg: row.weightKg,
-    trainingAgeMonths: row.trainingAgeMonths,
-    experienceLevel: row.experienceLevel,
-    primaryGoal: row.primaryGoal,
-    trainingDaysPerWeek: row.trainingDaysPerWeek,
-    trainingEnvironment: row.trainingEnvironment,
-    crossfitAffiliate: row.crossfitAffiliate,
-    injuriesNotes: row.injuriesNotes,
-    focusAreas: row.focusAreas ?? [],
-    strongAreas: row.strongAreas ?? [],
-    sleepTargetHours: row.sleepTargetHours,
-    competitionTarget: row.competitionTarget,
-    coachNotes: row.coachNotes,
-    sportDepartment: row.sportDepartment,
-    profileCompleted: row.profileCompleted,
-  };
+    const profile: AthleteProfileDTO = {
+      name: row.name,
+      age: row.age,
+      gender: row.gender,
+      heightCm: row.heightCm,
+      weightKg: row.weightKg,
+      trainingAgeMonths: row.trainingAgeMonths,
+      experienceLevel: row.experienceLevel,
+      primaryGoal: row.primaryGoal,
+      trainingDaysPerWeek: row.trainingDaysPerWeek,
+      trainingEnvironment: row.trainingEnvironment,
+      crossfitAffiliate: row.crossfitAffiliate,
+      injuriesNotes: row.injuriesNotes,
+      focusAreas: row.focusAreas ?? [],
+      strongAreas: row.strongAreas ?? [],
+      sleepTargetHours: row.sleepTargetHours,
+      competitionTarget: row.competitionTarget,
+      coachNotes: row.coachNotes,
+      sportDepartment: row.sportDepartment,
+      profileCompleted: row.profileCompleted,
+    };
 
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const [workoutCount, pbCount, scoreSnapshot] = await Promise.all([
-    prisma.workout.count({ where: { userId, date: { gte: thirtyDaysAgo } } }),
-    prisma.personalBest.count({ where: { userId } }),
-    getAthleteScoreSnapshot(userId),
-  ]);
+    const [workoutCount, pbCount, scoreSnapshot] = await Promise.all([
+      prisma.workout.count({ where: { userId, date: { gte: thirtyDaysAgo } } }),
+      prisma.personalBest.count({ where: { userId } }),
+      getAthleteScoreSnapshot(userId),
+    ]);
 
-  const analysis = analyzeAthleteProfile(toProfileInput(row), {
-    workoutsPerWeek: workoutCount / 4.3,
-    recentWorkoutCount: workoutCount,
-    pbCount,
-    categoryScores: {
-      strengthScore: scoreSnapshot.strengthScore,
-      olympicLiftingScore: scoreSnapshot.olympicLiftingScore,
-      engineScore: scoreSnapshot.engineScore,
-      gymnasticsScore: scoreSnapshot.gymnasticsScore,
-      powerScore: scoreSnapshot.powerScore,
-      consistencyScore: scoreSnapshot.consistencyScore,
-      recoveryScore: scoreSnapshot.recoveryScore,
-      mobilityScore: scoreSnapshot.mobilityScore,
-    },
-  });
+    const analysis = analyzeAthleteProfile(toProfileInput(row), {
+      workoutsPerWeek: workoutCount / 4.3,
+      recentWorkoutCount: workoutCount,
+      pbCount,
+      categoryScores: {
+        strengthScore: scoreSnapshot.strengthScore,
+        olympicLiftingScore: scoreSnapshot.olympicLiftingScore,
+        engineScore: scoreSnapshot.engineScore,
+        gymnasticsScore: scoreSnapshot.gymnasticsScore,
+        powerScore: scoreSnapshot.powerScore,
+        consistencyScore: scoreSnapshot.consistencyScore,
+        recoveryScore: scoreSnapshot.recoveryScore,
+        mobilityScore: scoreSnapshot.mobilityScore,
+      },
+    });
 
-  return { profile, analysis };
+    return { profile, analysis };
+  } catch (error) {
+    console.error("[profile] athlete profile data failed", error);
+    return { profile: null, analysis: null };
+  }
 }
 
 export async function saveAthleteProfileAction(

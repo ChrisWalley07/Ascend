@@ -5,11 +5,16 @@ export async function findAthleteProfile(prisma: PrismaClient, userId: string) {
 }
 
 export async function findAthleteScoreHistory(prisma: PrismaClient, userId: string, take = 30) {
-  return prisma.athleteScore.findMany({
-    where: { userId },
-    orderBy: { date: "asc" },
-    take,
-  });
+  return prisma.athleteScore
+    .findMany({
+      where: { userId },
+      orderBy: { date: "asc" },
+      take,
+    })
+    .catch((error) => {
+      console.error("[analytics] athlete score history failed", error);
+      return [];
+    });
 }
 
 export async function findHyroxScoreHistory(prisma: PrismaClient, userId: string, take = 30) {

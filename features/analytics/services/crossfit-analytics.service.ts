@@ -71,5 +71,11 @@ export async function getCrossfitAnalyticsForUser(userId: string): Promise<Cross
   const { getPrismaClient } = await import("@/infrastructure/database/client");
   const prisma = getPrismaClient();
   if (!prisma) return null;
-  return getCrossfitAnalytics(prisma, userId);
+
+  try {
+    return await getCrossfitAnalytics(prisma, userId);
+  } catch (error) {
+    console.error("[analytics] crossfit load failed", error);
+    return null;
+  }
 }
